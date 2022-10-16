@@ -1,11 +1,15 @@
 import { config } from "dotenv";
 import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import { connect } from "mongoose";
 
 import badWords from "./badWords.json" assert { type: "json" };
+import deleteBadMessage from "./events/deleteBadMessage/deleteBadMessage.js";
 
 config();
+
 const TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
+const MONGODB_URL = process.env.MONGODB_URL;
 const { array } = badWords;
 
 const client = new Client({
@@ -19,30 +23,22 @@ const client = new Client({
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 client.login(TOKEN);
+(async () => {
+  await connect(MONGODB_URL, { dbName: "db" })
+    .then(console.log("Connected!"))
+    .catch(console.error);
+})();
 
 client.on("ready", () => {
   console.log(`${client.user.username} is ready!`);
 });
 
 client.on("messageCreate", (message) => {
-  for (let i = 0; i < array.length; i++) {
-    const element = array[i];
-    const splitMessage = message.content.toLowerCase().split(" ");
-
-    for (let j = 0; j < splitMessage.length; j++) {
-      const el = splitMessage[j];
-
-      if (el === element.toLowerCase()) {
-        message.delete();
-        message.author.send("Bad!");
-      }
-    }
-  }
+  deleteBadMessage(message, array);
 });
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
-    console.log("hello, world!");
     interaction.reply({ content: "Hey, there!" });
   }
 });
