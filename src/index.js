@@ -1,9 +1,10 @@
 import { config } from "dotenv";
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import { Client, GatewayIntentBits, REST, Routes, Events } from "discord.js";
 import { connect } from "mongoose";
 
 import badWords from "./badWords.json" assert { type: "json" };
 import deleteBadMessage from "./events/deleteBadMessage/deleteBadMessage.js";
+import findBadWordInNickname from "./events/findBadWordInNickname/findBadWordInNickname.js";
 
 config();
 
@@ -17,6 +18,11 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+
+    // Events.UserUpdate,
+    // Events.GuildMemberUpdate,
+    // Events.PresenceUpdate,
   ],
 });
 
@@ -31,10 +37,16 @@ client.login(TOKEN);
 
 client.on("ready", () => {
   console.log(`${client.user.username} is ready!`);
+
+  findBadWordInNickname(client, array);
 });
 
 client.on("messageCreate", (message) => {
   deleteBadMessage(message, array);
+});
+
+client.on("guildMemberUpdate", (oldMember, newMember) => {
+  console.log("member", newMember);
 });
 
 client.on("interactionCreate", async (interaction) => {
