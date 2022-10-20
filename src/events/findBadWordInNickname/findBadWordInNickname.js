@@ -3,19 +3,21 @@ import User from "../../db/userSchema.js";
 
 const findBadWordInNickname = (client, array) => {
   client.on("guildMemberAdd", async (member) => {
+    await userProfile(member.user);
+
     for (let i = 0; i < array.length; i++) {
       const element = array[i];
-      const splitUsername = member.user.username.toLowerCase().split(" ");
+      const splitUsername = member.user?.username.toLowerCase().split(" ");
 
       for (let j = 0; j < splitUsername.length; j++) {
         const el = splitUsername[j];
 
-        if (el === element.toLowerCase()) {
+        if (el.toLowerCase() === element.toLowerCase()) {
           member.setNickname("запрещенный ник");
 
           member
             .send(
-              `Ваш никнейм на сервере Requiem был изменен на "**запрещенный ник**". Пожалуйста, измените его по желанию.`
+              `Ваш никнейм на сервере был изменен на "**запрещенный ник**". Пожалуйста, измените его по желанию.`
             )
             .catch((err) => err);
 

@@ -1,10 +1,26 @@
 import { config } from "dotenv";
-import { Client, GatewayIntentBits, REST, Routes, Events } from "discord.js";
+import {
+  ActionRowBuilder,
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SelectMenuBuilder,
+  EmbedBuilder,
+  ComponentType,
+} from "discord.js";
 import { connect } from "mongoose";
 
 import badWords from "./badWords.json" assert { type: "json" };
 import deleteBadMessage from "./events/deleteBadMessage/deleteBadMessage.js";
 import findBadWordInNickname from "./events/findBadWordInNickname/findBadWordInNickname.js";
+import memberUpdate from "./events/memberUpdate/memberUpdate.js";
+import helpCommand from "./commands/helpCommand.js";
+import myWarnsCommand from "./commands/myWarnsCommand.js";
+import User from "./db/userSchema.js";
+// import helpMessage from "./messages/helpMessage.js";
+import helpInitialMessage from "./commands/helpInitialMessage.js";
+// import helpSelector from "./commands/helpSelector.js";
 
 config();
 
@@ -19,10 +35,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-
-    // Events.UserUpdate,
-    // Events.GuildMemberUpdate,
-    // Events.PresenceUpdate,
   ],
 });
 
@@ -46,22 +58,46 @@ client.on("messageCreate", (message) => {
 });
 
 client.on("guildMemberUpdate", (oldMember, newMember) => {
-  console.log("member", newMember);
+  memberUpdate(newMember, array);
 });
 
 client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
-    interaction.reply({ content: "Hey, there!" });
+    if (interaction.commandName === "help") {
+      const actionRowSelect = (state) => [
+        new ActionRowBuilder().setComponents(
+          new SelectMenuBuilder()
+            .setCustomId("help_options")
+            .setDisabled(state)
+            .setOptions([
+              {
+                label: "Warns",
+                value: "предупреждения",
+                description: "Узнать о всю информацию об предупреждениях",
+                emoji: "⚠️",
+              },
+            ])
+        ),
+      ];
+      await helpInitialMessage(interaction, actionRowSelect);
+    }
+    // else if (interaction.commandName === "my-warns") {
+    //   let user = await User.findOne({ discordId: interaction.user.id });
+    //   const myWarnsMessage = new EmbedBuilder()
+    //     .setTitle("Мои предупреждения")
+    //     .setAuthor({
+    //       name: `${`${interaction.user.username}#${interaction.user.discriminator}`}`,
+    //       iconURL: `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.jpeg`,
+    //     })
+    //     .addFields({ name: "", value: "" });
+
+    //   interaction.reply({ embeds: [myWarnsMessage] });
+    // }
   }
 });
 
 async function main() {
-  const commands = [
-    {
-      name: "help",
-      description: "help!",
-    },
-  ];
+  const commands = [helpCommand];
 
   try {
     console.log("Started refreshing application (/) commands.");

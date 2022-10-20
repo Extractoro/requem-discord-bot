@@ -30,42 +30,67 @@ const deleteBadMessage = async (message, array) => {
 
         if (user?.warns === 10) {
           var tenWarns = `
-Вы получили тайм-аут на 3 дня, так как у вас уже 10 предупреждений. Пожалуйста, ознакомьтесь с таблицей предупреждений (||__**/help warns**__||) и не нарушайте впредь!`;
+Вы получили тайм-аут на 3 дня, так как у вас уже 10 предупреждений (Плохие слова).`;
         }
 
         if (user?.warns === 20) {
           var twelveWarns = `
-Вы получили роль Muted chat на 14 дней, так как у вас уже 20 предупреждений. Пожалуйста, ознакомьтесь с таблицей предупреждений (||__**/help warns**__||) и не нарушайте впредь!`;
+Вы получили роль Muted chat на 14 дней, так как у вас уже 20 предупреждений (Плохие слова).`;
         }
 
         if (user?.warns === 30) {
           var thirtyWarns = `
-Вы были забанены на сервере Requeim, так как вы набрали 30 предупреждений.`;
+Вы были забанены на сервере, так как вы набрали 30 предупреждений (Плохие слова).`;
         }
 
-        if (user?.warns === 30) {
-          message.member.ban({
-            deleteMessageSeconds: 1000 * 60,
-            reason: "Набрал 30 варнов",
-          });
+        if (user?.warns < 10) {
+          var tenMessage = `
+До следующего наказания (тайм-аут на 3 дня) вам осталось: ${
+            10 - user?.warns
+          } предупреждений`;
+        }
+
+        if (user?.warns > 10 && user?.warns < 20) {
+          var twentyMessage = `
+До следующего наказания (роль Muted chat на 14 дней) вам осталось: ${
+            20 - user?.warns
+          } предупреждений`;
+        }
+
+        if (user?.warns > 20 && user?.warns < 30) {
+          var thirtyMessage = `
+До следующего наказания (бан на сервере) вам осталось: ${
+            30 - user?.warns
+          } предупреждений`;
         }
 
         message.author
           .send(
-            `Вы получили предупреждение на сервере Requiem по причине: Плохие слова. У вас предупреждений: **${
-              user ? user?.warns : null
-            }**.
-            ${user?.warns === 10 ? tenWarns : ""}${
-              user?.warns === 20 ? twelveWarns : ""
-            }${user?.warns === 30 ? thirtyWarns : ""}
-             
-            
+            `${
+              user?.warns !== 10 && user?.warns !== 20 && user?.warns !== 30
+                ? `Вы получили предупреждение на сервере по причине: Плохие слова. У вас предупреждений: **${
+                    user ? user?.warns : null
+                  }**. Пожалуйста, ознакомьтесь с таблицей предупреждений (||__**/help и выбрать категорию Warns**__||) и не нарушайте впредь!`
+                : ""
+            }
+            ${user?.warns < 10 ? tenMessage : ""}${
+              user?.warns > 10 && user?.warns < 20 ? twentyMessage : ""
+            }${user?.warns > 20 && user?.warns < 30 ? thirtyMessage : ""}${
+              user?.warns === 10 ? tenWarns : ""
+            }${user?.warns === 20 ? twelveWarns : ""}${
+              user?.warns === 30 ? thirtyWarns : ""
+            }
             `
           )
           .catch((err) => err);
         message.delete().catch((err) => err);
 
         if (user?.warns === 30) {
+          await message.member.ban({
+            deleteMessageSeconds: 1000 * 60,
+            reason: "Набрал 30 варнов",
+          });
+
           await User.findOneAndDelete({
             discordId: message.author.id,
           });
