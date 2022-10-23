@@ -9,7 +9,7 @@ const helpSelector = async (interaction, actionRowSelect) => {
   const formatString = (str) =>
     `${str[0].toUpperCase()}${str.slice(1).toLowerCase()}`;
 
-  const initialMessage = interaction?.reply({
+  const initialMessage = await interaction?.reply({
     embeds: [embed],
     components: actionRowSelect(false),
   });
@@ -24,6 +24,7 @@ const helpSelector = async (interaction, actionRowSelect) => {
 
   collector.on("collect", async (interaction) => {
     const [directory] = interaction.values;
+    let userIns = await User.findOne({ discordId: interaction.user.id });
 
     const categoryEmbed = new EmbedBuilder()
       .setTitle(`${formatString(directory)}`)
@@ -37,32 +38,45 @@ const helpSelector = async (interaction, actionRowSelect) => {
       })
       .setDescription(
         `
-Вы: **${`${user?.discordName}#${user?.discordHashtag}`}**
-Количество ваших предупреждений (Плохие слова): **${user?.warns}**
+Вы: **${`${interaction.user.username}#${interaction.user.discriminator}`}**
+Количество ваших предупреждений (Плохие слова): **${userIns.warns}**
 Количество ваших предупреждений (Недопустимый никнейм): **${
-          user?.nicknameWarns
+          userIns.nicknameWarns
         }**`
       )
-
       .setFields(
         { name: "\u200B", value: "\u200B" },
         { name: "🤬 Плохие слова", value: "-------------------------" },
-        { name: "10 предупреждений", value: "⏲️ Тайм-аут на 3 дня" },
+        {
+          name: "10 предупреждений",
+          value: "⏲️ Тайм-аут на 3 дня",
+          inline: true,
+        },
         {
           name: "20 предупреждений",
           value: "🤐 Роль <@&1031267947198545920> на 14 дней",
+          inline: true,
         },
         {
           name: "30 предупреждений",
           value: "⛔ Бан на сервере",
+          inline: true,
         },
         { name: "\u200B", value: "\u200B" },
         {
           name: "💢 Недопустимый никнейм",
           value: "-------------------------",
         },
-        { name: "5 предупреждений", value: "⏲️ Тайм-аут на 7 дня" },
-        { name: "10 предупреждений", value: "⛔ Бан на сервере" }
+        {
+          name: "5 предупреждений",
+          value: "⏲️ Тайм-аут на 7 дня",
+          inline: true,
+        },
+        {
+          name: "10 предупреждений",
+          value: "⛔ Бан на сервере",
+          inline: true,
+        }
       );
 
     await interaction

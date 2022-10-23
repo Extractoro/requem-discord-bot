@@ -54,7 +54,10 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", (message) => {
-  deleteBadMessage(message, array);
+  const roleId = "1029832160238117005";
+  if (!message.member.roles.cache.has(roleId)) {
+    deleteBadMessage(message, array);
+  }
 });
 
 client.on("guildMemberUpdate", (oldMember, newMember) => {
